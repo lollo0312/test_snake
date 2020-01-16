@@ -18,9 +18,26 @@
 }
 
 .tile{
+    transition-timing-function : ease-in;
     position : absolute;
     width : 40px;
     height : 40px;
     border-radius : 5px;
 }
 
+.hidden{
+    display : none;
+}
+
+.show{
+    position : absolute;
+    font-family : sans-serif;
+    background-color : transparent;
+    font-size : 5em;
+}
+
+#compteur{
+    font-family : sans-serif;
+    font-weight : bold;
+    font-size : 2em;
+}

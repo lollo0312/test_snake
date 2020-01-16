@@ -5,6 +5,11 @@ const CHEATING_MODE = true;
 const RESPONSE_T = 150;
 
 let board = document.getElementById('board');
+let ziz = document.createElement('div');
+let compteur = document.getElementById('compteur');
+ziz.innerHTML = 'ZIZI TIME';
+ziz.className = 'hidden';
+board.appendChild(ziz);
 board.style.width = String(scl*SIZE) + 'px';
 board.style.height = String(scl*SIZE) + 'px';
 board.innerHTML
@@ -17,7 +22,6 @@ function choice(array){
     return array[randint(0,len)];
 }
 
-	
 class Tile{
     constructor(posX, posY){
         if (typeof posX == 'undefined'){
@@ -72,6 +76,7 @@ class Tile{
 class Snake{
     constructor(){
         this.ded = false;
+        this.moving = true;
         this.head = new Tile().setHead();
         this.body = [this.head];
         this.dir = choice([U,D,L,R]);
@@ -86,23 +91,27 @@ class Snake{
         if (Tile.matchTiles(this.head, this.body)){
             this.ded = true;    
         }
-        //toEras = ;
-        Tile.erase(this.body.pop()); 
         this.body.unshift(this.head);
+        if(this.moving){
+            Tile.erase(this.body.pop());    
+        } else{
+            this.moving = true
+        }
     }
     
     addMember(){
-        this.body.push(new Tile(this.head).setBody());
+        this.moving = false;
     }
     
-    eat(tile){
-        if(tile.x == this.head.x && tile.y == this.head.y){
-            this.addMember()
-            return true;
-        } else{
-            return false;
+    eat(tiles){
+        for (let tile of tiles){
+            if(tile.x == this.head.x && tile.y == this.head.y){
+                this.addMember()
+                compteur.innerHTML = 'Nombre de ziz englouties: ' + String(this.body.length);
+                return tile;
+            }   
         }
-        
+        return false;
     }
     
     chdir(dir){
@@ -113,18 +122,32 @@ class Snake{
 function addFood(snake){
     let temp = new Tile();
     while (Tile.matchTiles(temp,snake.body)){
+        Tile.erase(temp);
         temp = new Tile();
     }
     return temp.setFood();
+    
 }
 
 
 (function main(){
     let goodDir = (snake, d1,d2) => !(snake.dir == d2) || snake.body.length == 1;
     let snek = new Snake();
-    let food = addFood(snek);
+    let food = [addFood(snek)];
     let pause = false;
     orderStack = []
+    
+    
+    function zizTime(){
+        ziz.className = 'show';
+        ziz.style.top =  String(scl*SIZE/2) + 'px';
+        ziz.style.left = String(scl*SIZE/4) + 'px';
+        new Promise((resolve,reject) => setTimeout(resolve,1000)).then(() => ziz.className = 'hidden');
+        for (let i=0; i < 10; i++){
+            food.push(addFood(snek));
+        }
+    }
+    
     document.addEventListener('keypress', function(e){
         var goto;
         switch (e.key){
@@ -151,6 +174,8 @@ function addFood(snake){
                 pause = true
             }
             break;
+        case 'h':
+            zizTime();
         }
         if (goto && goodDir(snek, goto[0], goto[1])){
             orderStack.push(goto[0]);
@@ -158,14 +183,21 @@ function addFood(snake){
     });
     
     let next = function(){
-        return new Promise((resolve, reject) => setInterval(resolve,RESPONSE_T)).then(() => {
+        return new Promise((resolve, reject) => setTimeout(resolve,RESPONSE_T)).then(() => {
+            if (Math.random()<=.002){
+                zizTime();
+            }
             if (orderStack.length > 0){
                 snek.chdir(orderStack.pop());
             }
             window.requestAnimationFrame(() => snek.move());
-            if (snek.eat(food)){
-                Tile.erase(food);
-                food = addFood(snek);
+            eaten = snek.eat(food); 
+            if (eaten){
+                Tile.erase(eaten);
+                food.splice(food.indexOf(eaten),1);
+                if (food.length < 1){
+                    food.push(addFood(snek));
+                }
             }
             if (snek.ded){
                 alert('ded')
