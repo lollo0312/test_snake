@@ -254,7 +254,7 @@ let best_score = 0;
 let best = document.getElementById('best');
 let invertCommands = false;
 let shown = [false,false,false];
-
+let music = document.getElementById('music');
 
 best.setStyle({
     'transition' : 'color .15s ease-in-out',
@@ -271,6 +271,7 @@ function updateBest(n){
 }
 
 function restart(){
+    music.play();
     let win = snek.gameBoard.window;
     for (menu of snek.gameBoard.menus){
         win.parentElement.appendChild(menu);
@@ -428,5 +429,5 @@ let next = function(){
     }) 
 };
 
-next();    
+restart();    
 
