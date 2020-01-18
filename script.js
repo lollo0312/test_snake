@@ -250,7 +250,7 @@ let snek;
 let food;
 let pause;
 let orderStack;
-let best_score = 0;
+let best_score;
 let best = document.getElementById('best');
 let invertCommands = false;
 let shown = [false,false,false];
@@ -258,12 +258,11 @@ let music = document.getElementById('music');
 
 function mainMenu(){
     if (snek) deletall();
+    best_score = 0;
     snek = new SnakeGame();
     snek.gameBoard.layout.setStyle({'display':'none'});
     snek.gameBoard.menus[2].setStyle({
         'display' : 'block',
-        'top' : '-2px',
-        'left' : '-2px',
         'background-color' :'black',
         'height' : String(Math.min(window.innerWidth,window.innerHeight)) + 'px',
         'width' : String(Math.min(window.innerWidth,window.innerHeight)) + 'px',
@@ -419,6 +418,9 @@ document.addEventListener('keypress', function(e){
 
 let next = function(){
     return new Promise((resolve, reject) => setTimeout(resolve,RESPONSE_T)).then(() => {
+        if (snek.ded){
+            snek.gameBoard.menus[1].show();
+        }
         if (Math.random()<=.002){
             zizTime();
         }
@@ -436,19 +438,17 @@ let next = function(){
             food.push(snek.addFood());
         }
         
-        if(snek.body.length > SIZE*5 && !shown[0]){
-            showMessage('100?!!!!! AMAZING!');
+        if(snek.body.length > SIZE*SIZE/8 && !shown[0]){
+            showMessage(String(Math.floor( SIZE*SIZE/8)) + '?!!!!! AMAZING!');
             shown[0] = true;
-        } else if (snek.body.length > SIZE*3.75 && !shown[1]){
-            showMessage('75 ziz!!! Assssstonishing');
+        } else if (snek.body.length > SIZE*SIZE*3/8 && !shown[1]){
+            showMessage(String(Math.floor( SIZE*SIZE*3/8)) + 'ziz!!! Assssstonishing');
             shown[1] = true;
-        } else if (snek.body.length > SIZE*2.5 && !shown[2]){
-            showMessage('50 ziz?! Impresssssive');
+        } else if (snek.body.length > SIZE*SIZE/4 && !shown[2]){
+            showMessage(String(Math.floor(SIZE*SIZE/4)) + 'ziz?! Impresssssive');
             shown[2] = true;
         }
-        if (snek.ded){
-            snek.gameBoard.menus[1].show();
-        } else if (!pause){ 
+        if (!snek.ded && !pause){
             next();
         }
     }) 
