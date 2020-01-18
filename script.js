@@ -1,9 +1,9 @@
 const BASE_COLOR = '#ad7fa8', HEAD_COLOR = '#5c3566', FOOD_COLOR = 'transparent';
 const U = [0 ,-1], D = [0 , 1], L = [-1, 0], R = [1 , 0];
-const SIZE = 20;
 const RESPONSE_T = 140;
 const CHEATING_MODE = true;
 const POISON_P = 0.05;
+const POPUP_T = 1500;
 
 Element.prototype.setStyle = function(styleObject){
     for (key in styleObject){
@@ -178,7 +178,7 @@ class Tile{
 
 class SnakeGame{
     constructor(){
-        this.gameBoard = new Interface().initPopUp().initCounter('Nombre de Ziz englouties: ').initMenu(0).initMenu(1);
+        this.gameBoard = new Interface().initPopUp().initCounter('Nombre de Ziz englouties: ').initMenu(0).initMenu(1).initMenu(2);
         this.gameBoard.scl = Math.floor(this.gameBoard.computedWidth / SIZE);
         
         this.ded = false;
@@ -246,15 +246,31 @@ class SnakeGame{
 
 /*Remake Main properly*/
 let goodDir = (snake, d1,d2) => !(snake.dir == d2 || snake.dir == d1) || snake.body.length == 1;
-let snek = new SnakeGame();
-let food = [snek.addFood()];
-let pause = false;
-let orderStack = []
+let snek;
+let food;
+let pause;
+let orderStack;
 let best_score = 0;
 let best = document.getElementById('best');
 let invertCommands = false;
 let shown = [false,false,false];
 let music = document.getElementById('music');
+
+function mainMenu(){
+    if (snek) deletall();
+    snek = new SnakeGame();
+    snek.gameBoard.layout.setStyle({'display':'none'});
+    snek.gameBoard.menus[2].setStyle({
+        'display' : 'block',
+        'top' : '-2px',
+        'left' : '-2px',
+        'background-color' :'black',
+        'height' : String(Math.min(window.innerWidth,window.innerHeight)) + 'px',
+        'width' : String(Math.min(window.innerWidth,window.innerHeight)) + 'px',
+        'color' : 'white',
+    });
+        
+}
 
 best.setStyle({
     'transition' : 'color .15s ease-in-out',
@@ -270,8 +286,7 @@ function updateBest(n){
     best.innerHTML = bestText + String(n);
 }
 
-function restart(){
-    music.play();
+function deletall(){
     let win = snek.gameBoard.window;
     for (menu of snek.gameBoard.menus){
         win.parentElement.appendChild(menu);
@@ -279,6 +294,14 @@ function restart(){
     while(win.hasChildNodes()){
         win.removeChild(win.firstChild);
     }
+}
+
+let SIZE;
+function restart(size){
+    snek.gameBoard.menus[2].hide()
+    if(size) SIZE = size;
+    music.play();
+    deletall();
     snek = new SnakeGame();
     food = [snek.addFood()];
     pause = false;
@@ -286,6 +309,7 @@ function restart(){
     orderStack = [];
     next();
 }
+
 
 function unpause(){
     pause = false;
@@ -306,7 +330,7 @@ function zizTime(){
         'left' : String(snek.gameBoard.scl*SIZE/6) + 'px',
     });
     new Promise((resolve,reject) => setTimeout(resolve,1000)).then(() => ziz.restart());
-    for (let i=0; i < 10; i++){
+    for (let i=0; i < SIZE/2; i++){
         food.push(snek.addFood());
     }
 }
@@ -328,7 +352,7 @@ function urDrunk(){
       'transition' : 'border-color 1s ease-in-out',
       'border-color': 'darkgreen',
     });
-    new Promise((resolve,reject) => setTimeout(resolve,1000)).then(() => drunk.restart());
+    new Promise((resolve,reject) => setTimeout(resolve,POPUP_T)).then(() => drunk.restart());
     invertCommands = true;
 }
 
@@ -351,7 +375,7 @@ function showMessage(message){
         'top' : String(snek.gameBoard.scl*SIZE/2) + 'px',
         'left' : String(snek.gameBoard.scl*SIZE/4) + 'px',
     });
-    new Promise((resolve,reject) => setTimeout(resolve,1000)).then(() => prompt.restart());    
+    new Promise((resolve,reject) => setTimeout(resolve,POPUP_T)).then(() => prompt.restart());    
 }
 
 document.addEventListener('keypress', function(e){
@@ -392,6 +416,7 @@ document.addEventListener('keypress', function(e){
     }
 });
 
+
 let next = function(){
     return new Promise((resolve, reject) => setTimeout(resolve,RESPONSE_T)).then(() => {
         if (Math.random()<=.002){
@@ -411,13 +436,13 @@ let next = function(){
             food.push(snek.addFood());
         }
         
-        if(snek.body.length > 100 && !shown[0]){
+        if(snek.body.length > SIZE*5 && !shown[0]){
             showMessage('100?!!!!! AMAZING!');
             shown[0] = true;
-        } else if (snek.body.length > 75 && !shown[1]){
+        } else if (snek.body.length > SIZE*3.75 && !shown[1]){
             showMessage('75 ziz!!! Assssstonishing');
             shown[1] = true;
-        } else if (snek.body.length > 50 && !shown[2]){
+        } else if (snek.body.length > SIZE*2.5 && !shown[2]){
             showMessage('50 ziz?! Impresssssive');
             shown[2] = true;
         }
@@ -429,5 +454,5 @@ let next = function(){
     }) 
 };
 
-restart();    
+mainMenu();   
 
