@@ -2,7 +2,8 @@ const BASE_COLOR = '#ad7fa8', HEAD_COLOR = '#5c3566', FOOD_COLOR = 'transparent'
 const U = [0 ,-1], D = [0 , 1], L = [-1, 0], R = [1 , 0];
 const SIZE = 20;
 const RESPONSE_T = 140;
-const CHEATING_MODE = false;
+const CHEATING_MODE = true;
+const POISON_P = 0.05;
 
 Element.prototype.setStyle = function(styleObject){
     for (key in styleObject){
@@ -44,8 +45,7 @@ class Interface{
     }
     
     initPopUp(name){
-        if(!this.popUps) this.popUps = {};
-        let popUp = this.popUps[name] = document.createElement('div');
+        let popUp = this.popUp = document.createElement('div');
         popUp.restart = () => {
             popUp.setStyle({
                 'color' : 'transparent',
@@ -144,12 +144,24 @@ class Tile{
     }
     
     setFood(){
+        this.poisonous = false;
         let scl = this.parent.scl;
         this.tile.setStyle({
             'border-radius' : String(parent/2) + 'px',
             'background-color' : FOOD_COLOR,
         })
         this.tile.innerHTML = "<img src= 'food.png' style='width:" + String(scl) + "px;height:" + String(scl) + "px'/>";
+        return this;
+    }
+    
+    setPoison(){
+        this.poisonous = true;
+        let scl = this.parent.scl;
+        this.tile.setStyle({
+            'border-radius' : String(parent/2) + 'px',
+            'background-color' : FOOD_COLOR,
+        })
+        this.tile.innerHTML = "<img src= 'poison.png' style='width:" + String(scl) + "px;height:" + String(scl) + "px'/>";
         return this;
     }
     
@@ -166,7 +178,7 @@ class Tile{
 
 class SnakeGame{
     constructor(){
-        this.gameBoard = new Interface().initPopUp('ziztime').initCounter('Nombre de Ziz englouties: ').initMenu(0).initMenu(1);
+        this.gameBoard = new Interface().initPopUp().initCounter('Nombre de Ziz englouties: ').initMenu(0).initMenu(1);
         this.gameBoard.scl = Math.floor(this.gameBoard.computedWidth / SIZE);
         
         this.ded = false;
@@ -200,9 +212,11 @@ class SnakeGame{
     eat(tiles){
         for (let tile of tiles){
             if(tile.x == this.head.x && tile.y == this.head.y){
-                this.addMember()
-                this.gameBoard.counter.update(this.body.length);
-                if(this.body.length > best_score) updateBest(this.body.length);
+                if (!tile.poisonous){
+                    this.addMember()
+                    this.gameBoard.counter.update(this.body.length);
+                    if(this.body.length > best_score) updateBest(this.body.length);
+                }
                 return tile;
             }   
         }
@@ -219,19 +233,29 @@ class SnakeGame{
             this.gameBoard.erase(temp);
             temp = new Tile(this.gameBoard);
         }
-        return temp.setFood();
+        if (Math.random() <= POISON_P){
+            new Promise((a,b) => setTimeout(()=>a(),10000)).then(()=> removePoison(temp));
+            return temp.setPoison();
+        }
+        else{
+            return temp.setFood();
+        }
     }
 }
 
 
 /*Remake Main properly*/
-let goodDir = (snake, d1,d2) => !(snake.dir == d2) || snake.body.length == 1;
+let goodDir = (snake, d1,d2) => !(snake.dir == d2 || snake.dir == d1) || snake.body.length == 1;
 let snek = new SnakeGame();
 let food = [snek.addFood()];
 let pause = false;
 let orderStack = []
 let best_score = 0;
 let best = document.getElementById('best');
+let invertCommands = false;
+let shown = [false,false,false];
+
+
 best.setStyle({
     'transition' : 'color .15s ease-in-out',
     'font-family' : 'sans-serif',
@@ -257,6 +281,7 @@ function restart(){
     snek = new SnakeGame();
     food = [snek.addFood()];
     pause = false;
+    shown = [false,false,false];
     orderStack = [];
     next();
 }
@@ -268,7 +293,7 @@ function unpause(){
 }
 
 function zizTime(){
-    let ziz = snek.gameBoard.popUps['ziztime'];
+    let ziz = snek.gameBoard.popUp;
     ziz.innerHTML = "IT's ZIZ TIME";
     ziz.setStyle({
         'color':'mediumvioletred',
@@ -285,7 +310,48 @@ function zizTime(){
     }
 }
 
+function urDrunk(){
+    let drunk = snek.gameBoard.popUp;
+    drunk.innerHTML = "OH NO UR DRUNK";
+    drunk.setStyle({
+        'color':'darkgreen',
+        'position' : 'absolute',
+        'font-family' : 'sans-serif',
+        'background-color' : 'transparent',
+        'font-size' : '5em',
+        'top' : String(snek.gameBoard.scl*SIZE/2) + 'px',
+        'left' : String(snek.gameBoard.scl*SIZE/6) + 'px',
+    });
+    let bord = snek.gameBoard.board;
+    bord.setStyle({
+      'transition' : 'border-color 1s ease-in-out',
+      'border-color': 'darkgreen',
+    });
+    new Promise((resolve,reject) => setTimeout(resolve,1000)).then(() => drunk.restart());
+    invertCommands = true;
+}
 
+function removePoison(tile){
+    snek.gameBoard.board.setStyle({'border-color':'black'});
+    invertCommands = false;
+    snek.gameBoard.erase(tile);
+    food.splice(food.indexOf(tile),1);
+}
+
+function showMessage(message){
+    let prompt = snek.gameBoard.popUp;
+    prompt.innerHTML = message;
+    prompt.setStyle({
+        'color':'black',
+        'position' : 'absolute',
+        'font-family' : 'sans-serif',
+        'background-color' : 'transparent',
+        'font-size' : '4em',
+        'top' : String(snek.gameBoard.scl*SIZE/2) + 'px',
+        'left' : String(snek.gameBoard.scl*SIZE/4) + 'px',
+    });
+    new Promise((resolve,reject) => setTimeout(resolve,1000)).then(() => prompt.restart());    
+}
 
 document.addEventListener('keypress', function(e){
     var goto;
@@ -314,10 +380,14 @@ document.addEventListener('keypress', function(e){
         }
         break;
     case 'h':
-        zizTime();
+        if(CHEATING_MODE) zizTime();
     }
     if (goto && goodDir(snek, goto[0], goto[1])){
-        orderStack.push(goto[0]);
+        if (invertCommands){
+            orderStack.push(goto[1]);
+        } else{
+            orderStack.push(goto[0]);
+        }
     }
 });
 
@@ -330,13 +400,25 @@ let next = function(){
             snek.chdir(orderStack.pop());
         }
         window.requestAnimationFrame(() => snek.move());
-        eaten = snek.eat(food); 
+        let eaten = snek.eat(food); 
         if (eaten){
+            if (eaten.poisonous) urDrunk();
             snek.gameBoard.erase(eaten);
             food.splice(food.indexOf(eaten),1);
-            if (food.length < 1){
-                food.push(snek.addFood());
-            }
+        }
+        if (food.length < 1){
+            food.push(snek.addFood());
+        }
+        
+        if(snek.body.length > 100 && !shown[0]){
+            showMessage('100?!!!!! AMAZING!');
+            shown[0] = true;
+        } else if (snek.body.length > 75 && !shown[1]){
+            showMessage('75 ziz!!! Assssstonishing');
+            shown[1] = true;
+        } else if (snek.body.length > 50 && !shown[2]){
+            showMessage('50 ziz?! Impresssssive');
+            shown[2] = true;
         }
         if (snek.ded){
             snek.gameBoard.menus[1].show();
