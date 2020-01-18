@@ -418,9 +418,6 @@ document.addEventListener('keypress', function(e){
 
 let next = function(){
     return new Promise((resolve, reject) => setTimeout(resolve,RESPONSE_T)).then(() => {
-        if (snek.ded){
-            snek.gameBoard.menus[1].show();
-        }
         if (Math.random()<=.002){
             zizTime();
         }
@@ -438,17 +435,19 @@ let next = function(){
             food.push(snek.addFood());
         }
         
-        if(snek.body.length > SIZE*SIZE/8 && !shown[0]){
-            showMessage(String(Math.floor( SIZE*SIZE/8)) + '?!!!!! AMAZING!');
+        if(snek.body.length > SIZE*SIZE/4  && !shown[0]){
+            showMessage(String(Math.floor(SIZE*SIZE/4)) + '?!!!!! AMAZING!');
             shown[0] = true;
         } else if (snek.body.length > SIZE*SIZE*3/8 && !shown[1]){
             showMessage(String(Math.floor( SIZE*SIZE*3/8)) + 'ziz!!! Assssstonishing');
             shown[1] = true;
-        } else if (snek.body.length > SIZE*SIZE/4 && !shown[2]){
-            showMessage(String(Math.floor(SIZE*SIZE/4)) + 'ziz?! Impresssssive');
+        } else if (snek.body.length > SIZE*SIZE/8 && !shown[2]){
+            showMessage(String(Math.floor(SIZE*SIZE/8)) + 'ziz?! Impresssssive');
             shown[2] = true;
         }
-        if (!snek.ded && !pause){
+        if (snek.ded){
+            snek.gameBoard.menus[1].show();
+        } else if (!pause){
             next();
         }
     }) 
