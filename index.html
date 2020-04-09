@@ -2,6 +2,7 @@
 
 <head>
 <meta charset="UTF-8"/>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -26,5 +27,14 @@
     <button type='button' onclick='restart(30)'> Jefke </button>
 </div>
 <div id= 'best'> Meilleur Score: </div>
+<div id="buttonsWrapper">
+    <div></div>
+    <div class="button" id="up" onmousedown="handleMoveAsked(1)"> ^ </div>
+    <div></div>
+    <div class="button" id="left" onmousedown="handleMoveAsked(2)"> < </div>
+    <div class="button" id="down" onmousedown="handleMoveAsked(3)"> v </div>
+    <div class="button" id="right" onmousedown="handleMoveAsked(4)"> > </div>
+</div>
+<div class="button" id="pause" onmousedown="handleMoveAsked(5)"> Pause</div>
 <script src="script.js"></script>
 </body>

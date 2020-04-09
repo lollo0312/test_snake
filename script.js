@@ -7,7 +7,7 @@ const POPUP_T = 1500;
 
 Element.prototype.setStyle = function(styleObject){
     for (key in styleObject){
-        this.style[key] = styleObject[key];    
+        this.style[key] = styleObject[key];
     }
 }
 
@@ -21,8 +21,9 @@ function choice(array){
 
 class Interface{
     constructor(){
-        this.window = document.getElementById('mainWindow')
+        this.window = document.getElementById('mainWindow');
         this.layout = document.createElement('div');
+        this.buttons = document.getElementById('buttonsWrapper');
         this.layout.setStyle({
             'display' : 'flex',
             'flex-direction' : 'column',
@@ -35,15 +36,20 @@ class Interface{
             'width'  : String(height) + 'px',
             'background-color' : '#e28585',
         });
-        
+        this.buttons.setStyle({
+            'width': '60px',
+            'position': 'relative',
+            'display': 'grid',
+            'grid-template-columns': 'auto auto auto',
+        });
         this.window.appendChild(this.layout);
         this.layout.appendChild(this.board);
     }
-    
+
     erase(tile){
         this.board.removeChild(tile.tile);
     }
-    
+
     initPopUp(name){
         let popUp = this.popUp = document.createElement('div');
         popUp.restart = () => {
@@ -56,7 +62,7 @@ class Interface{
         this.window.appendChild(popUp);
         return this;
     }
-    
+
     initCounter(defaultText){
         this.counter = document.createElement('div');
         this.counter.setStyle({
@@ -90,14 +96,14 @@ class Interface{
             'font-size' : '2em',
         });
         menu.show = () => {
-            menu.setStyle({'display':'block'});    
+            menu.setStyle({'display':'block'});
         };
         menu.hide = () => {
             menu.setStyle({'display':'none'});
         };
         this.window.appendChild(menu);
         return this;
-    }        
+    }
 }
 
 class Tile{
@@ -109,7 +115,7 @@ class Tile{
             posX = randint(0,SIZE);
         } else if (posX instanceof Tile){
             posY = posX.y;
-            posX = posX.x;       
+            posX = posX.x;
         }
         this.x = posX;
         this.y = posY;
@@ -125,7 +131,7 @@ class Tile{
         });
         this.parent.board.appendChild(this.tile);
     }
-    
+
     setHead(){
         let scl = this.parent.scl;
         this.tile.setStyle({
@@ -134,7 +140,7 @@ class Tile{
         this.tile.innerHTML = "<img src= 'head.png' style='width:" + String(scl) + "px;height:" + String(scl) + "px'/>";
         return this;
     }
-    
+
     setBody(){
         this.tile.setStyle({
            'background-color' : BASE_COLOR,
@@ -142,7 +148,7 @@ class Tile{
         this.tile.innerHTML = '';
         return this;
     }
-    
+
     setFood(){
         this.poisonous = false;
         let scl = this.parent.scl;
@@ -153,7 +159,7 @@ class Tile{
         this.tile.innerHTML = "<img src= 'food.png' style='width:" + String(scl) + "px;height:" + String(scl) + "px'/>";
         return this;
     }
-    
+
     setPoison(){
         this.poisonous = true;
         let scl = this.parent.scl;
@@ -164,7 +170,7 @@ class Tile{
         this.tile.innerHTML = "<img src= 'poison.png' style='width:" + String(scl) + "px;height:" + String(scl) + "px'/>";
         return this;
     }
-    
+
     static matchTiles(tile, tiles){
         let out = false;
         for (let t of tiles){
@@ -180,14 +186,14 @@ class SnakeGame{
     constructor(){
         this.gameBoard = new Interface().initPopUp().initCounter('Nombre de Ziz englouties: ').initMenu(0).initMenu(1).initMenu(2);
         this.gameBoard.scl = Math.floor(this.gameBoard.computedWidth / SIZE);
-        
+
         this.ded = false;
         this.moving = true;
         this.head = new Tile(this.gameBoard).setHead();
         this.body = [this.head];
         this.dir = choice([U,D,L,R]);
     }
-    
+
     move(){
         let newX = this.head.x + this.dir[0], newY = this.head.y + this.dir[1];
         newX = (0 <= newX && newX < SIZE) ? newX : SIZE - Math.abs(newX);
@@ -195,20 +201,20 @@ class SnakeGame{
         this.head = new Tile(this.gameBoard, newX, newY).setHead();
         this.body[0].setBody();
         if (Tile.matchTiles(this.head, this.body)){
-            this.ded = true;    
+            this.ded = true;
         }
         this.body.unshift(this.head);
         if(this.moving){
-            this.gameBoard.erase(this.body.pop());    
+            this.gameBoard.erase(this.body.pop());
         } else{
             this.moving = true
         }
     }
-    
+
     addMember(){
         this.moving = false;
     }
-    
+
     eat(tiles){
         for (let tile of tiles){
             if(tile.x == this.head.x && tile.y == this.head.y){
@@ -218,15 +224,15 @@ class SnakeGame{
                     if(this.body.length > best_score) updateBest(this.body.length);
                 }
                 return tile;
-            }   
+            }
         }
         return false;
     }
-    
+
     chdir(dir){
         this.dir = dir;
     }
-    
+
     addFood(){
         let temp = new Tile(this.gameBoard);
         while (Tile.matchTiles(temp,this.body)){
@@ -268,7 +274,7 @@ function mainMenu(){
         'width' : String(Math.min(window.innerWidth,window.innerHeight)) + 'px',
         'color' : 'white',
     });
-        
+
 }
 
 best.setStyle({
@@ -312,7 +318,7 @@ function restart(size){
 
 function unpause(){
     pause = false;
-    snek.gameBoard.menus[0].hide(); 
+    snek.gameBoard.menus[0].hide();
     next();
 }
 
@@ -374,34 +380,60 @@ function showMessage(message){
         'top' : String(snek.gameBoard.scl*SIZE/2) + 'px',
         'left' : String(snek.gameBoard.scl*SIZE/4) + 'px',
     });
-    new Promise((resolve,reject) => setTimeout(resolve,POPUP_T)).then(() => prompt.restart());    
+    new Promise((resolve,reject) => setTimeout(resolve,POPUP_T)).then(() => prompt.restart());
 }
 
-document.addEventListener('keypress', function(e){
+function handleMoveAsked(moveIndex){
     var goto;
-    switch (e.key){
-    case 'z': 
+    switch (moveIndex){
+    case 1:
         goto = [U, D];
         break;
-    case 'q':
+    case 2:
         goto = [L, R];
         break;
-    case 's':
+    case 3:
         goto = [D, U];
         break;
-    case 'd':
+    case 4:
         goto = [R, L];
         break;
-    case ' ':
-        if(CHEATING_MODE) snek.addMember();
-        break;
-    case 'p':
+    case 5:
         if (pause){
             unpause()
         } else {
             pause = true;
             snek.gameBoard.menus[0].show();
         }
+        break;
+    }
+    if (goto && goodDir(snek, goto[0], goto[1])){
+        if (invertCommands){
+            orderStack.push(goto[1]);
+        } else{
+            orderStack.push(goto[0]);
+        }
+    }
+}
+
+
+document.addEventListener('keypress', function(e){
+    let orders = 0;
+    switch (e.key){
+    case 'p':
+        orders++
+    case 'd':
+        orders++
+    case 's':
+        orders++;
+    case 'q':
+        orders++;
+    case 'z':
+        orders++;
+        handleMoveAsked(orders)
+        break;
+    case ' ':
+        if(CHEATING_MODE) snek.addMember();
         break;
     case 'h':
         if(CHEATING_MODE) zizTime();
@@ -425,7 +457,7 @@ let next = function(){
             snek.chdir(orderStack.pop());
         }
         window.requestAnimationFrame(() => snek.move());
-        let eaten = snek.eat(food); 
+        let eaten = snek.eat(food);
         if (eaten){
             if (eaten.poisonous) urDrunk();
             snek.gameBoard.erase(eaten);
@@ -434,7 +466,7 @@ let next = function(){
         if (food.length < 1){
             food.push(snek.addFood());
         }
-        
+
         if(snek.body.length > SIZE*SIZE/4  && !shown[0]){
             showMessage(String(Math.floor(SIZE*SIZE/4)) + '?!!!!! AMAZING!');
             shown[0] = true;
@@ -450,8 +482,7 @@ let next = function(){
         } else if (!pause){
             next();
         }
-    }) 
+    })
 };
 
-mainMenu();   
-
+mainMenu();
