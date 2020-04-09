@@ -3,6 +3,10 @@
     box-shadow: 0 0 10px black;
 }
 
+.button{
+    display: none;
+}
+
 #pause {
     width: 150px;
     height: 50px;

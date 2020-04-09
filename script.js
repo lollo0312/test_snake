@@ -304,6 +304,14 @@ function deletall(){
 let SIZE;
 function restart(size){
     snek.gameBoard.menus[2].hide()
+    let but_size = snek.gameBoard.computedWidth/3;
+    for (button of document.getElementsByClassName("button")){
+        button.setStyle({
+            'display':'block',
+            'width' : but_size,
+            'height': but_size,
+        });
+    }
     if(size) SIZE = size;
     music.play();
     deletall();
