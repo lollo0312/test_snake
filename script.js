@@ -37,7 +37,7 @@ class Interface{
             'background-color' : '#e28585',
         });
         this.buttons.setStyle({
-            'width': '60px',
+            'width': '150px',
             'position': 'relative',
             'display': 'grid',
             'grid-template-columns': 'auto auto auto',
